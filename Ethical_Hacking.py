@@ -6,6 +6,12 @@ import re
 from datetime import datetime
 import os
 import subprocess #we use this module to exec namp commands on terminal
+#Tracking Folders
+import sys
+import time
+import logging
+from watchdog.observers import Observer
+from watchdog.events import LoggingEventHandler
 
 window = tk.Tk()
 window.config(background="ghostwhite")
@@ -19,6 +25,7 @@ page1 = Frame(window,background="ghostwhite")
 page2 = Frame(window)
 page3 = Frame(window)
 page4 =  Frame(window)
+page5 =  Frame(window)
 
 c =Canvas(page1,bg="grey",height=200,width=200)
 filename = PhotoImage(file="hacking.png")
@@ -31,6 +38,7 @@ page1.grid(row=0,column=0, sticky="nsew")
 page2.grid(row=0,column=0, sticky="nsew")
 page3.grid(row=0,column=0, sticky="nsew")
 page4.grid(row=0,column=0, sticky="nsew")
+page5.grid(row=0,column=0, sticky="nsew")
 
 page2.configure(bg='ghostwhite')
 
@@ -56,9 +64,14 @@ IP_Address_Button = Button(page1,text="Intrusion Detection",font=("Bold",15),
 OS_Detection_Button = Button(page1,text="OS Detection",font=("Bold",15),
                                 bg="#1877f2",
                                 fg="white",width=20, command=lambda:page4.tkraise() )
-Scan_Button.pack(pady=7)
-IP_Address_Button.pack(pady=20)
+
+Track_Folder = Button(page1,text="Track Folder",font=("Bold",15),
+                                bg="#1877f2",
+                                fg="white",width=20, command=lambda:page5.tkraise() )
+Scan_Button.pack()
+IP_Address_Button.pack(pady=7)
 OS_Detection_Button.pack()
+Track_Folder.pack(pady=7)
 
 #----------------------------Page 2 ( Scan Port )------------------
 
@@ -234,6 +247,76 @@ Scan_Button_3.grid(row=2,column=0, columnspan=2, padx=10, pady=5)
 OS_textbox.grid(row=3,columnspan=2,column=0)
 
 
+#-------------------------- Tracking Files-------------------------------
+
+def Open_Tracker():
+    text_file = open("Tracker.txt","r")
+    data = text_file.read()
+    folder_textbox.insert(tk.END, data )
+    text_file.close()
+   
+
+def TrackFolder():
+  
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    
+    # Create a FileHandler and set its output file to text.txt
+    file_handler = logging.FileHandler("Tracker.txt")
+    
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+    
+    # Add the FileHandler to the root logger
+    logging.getLogger().addHandler(file_handler)
+    
+    path = "C:/Users/Daniel/Downloads"
+    event_handler = LoggingEventHandler()
+    observer = Observer()
+    observer.schedule(event_handler, folder_Entry.get(), recursive=True)
+    observer.start()
+
+    start_time = time.time()
+    try:
+      while True:
+            if time.time() - start_time >= int(folder_Time_Entry.get()):
+                observer.stop()
+                observer.join()
+                sys.exit()
+    finally:
+        observer.stop()
+        observer.join()
+
+  
+  
+
+back_Button_4 = Button(page5,text="Back",font=("Bold",8),
+                                bg="#1877f2",
+                                fg="white",width=15, command=lambda:page1.tkraise() )
+back_Button_4.grid(row=0,column=1,padx=5, pady=5)
+
+folder_tracking = Label(page5,text="Enter the folder path to track :", width=30, borderwidth=.5, relief="solid", padx=10,pady=10).grid(row=1,column=0)
+
+folder_tracking_time = Label(page5,text="Enter the time when to stop track folder :", width=30, borderwidth=.5, relief="solid", padx=10,pady=10).grid(row=2,column=0,pady=10)
+
+folder_Time_Entry = Entry(page5,width=37)
+folder_Time_Entry.grid(row=2,column=1)
+folder_Entry = Entry(page5,width=37)
+folder_Entry.grid(row=1,column=1)
+
+folder_textbox = Text(page5, height=30, width=71)
+
+start_Track = Button(page5,text="Start Track",font=("Bold",8),
+                                bg="lightgreen",
+                                fg="black",width=25, command=TrackFolder)
+start_Track.grid(row=3,column=0, padx=10, pady=5)
+get_Track_Logs = Button(page5,text="Stop Track",font=("Bold",8),
+                                bg="lightgreen",
+                                fg="black",width=25, command=Open_Tracker)
+get_Track_Logs.grid(row=3,column=1,padx=5, pady=5)
+
+folder_textbox.grid(row=4,columnspan=2,column=0)
 page1.tkraise()
 
 window.geometry("570x590")
